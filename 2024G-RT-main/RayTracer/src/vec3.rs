@@ -1,9 +1,10 @@
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Neg};
 use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
 
-#[derive(Clone, Debug, PartialEq)]
+
+#[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -33,6 +34,25 @@ impl Vec3 {
             y:a.y*b.y,
             z:a.z*b.z,
         }
+    }
+    pub fn cross(a:Vec3,b:Vec3)->Vec3
+    {
+        Vec3{
+            x:a.y*b.z-a.z*b.y,
+            y:a.z*b.x-a.x*b.z,
+            z:a.x*b.y-a.y*b.x,
+        }
+    }
+
+    pub fn unit(self)-> Vec3 {
+        let len = self.length();
+        if len == 0.0 {
+            panic!("Zero length vector cannot be normalized.");
+        }
+        self / len
+    }
+    pub fn length(&self) -> f64 {
+        self.squared_length().sqrt()
     }
 }
 
@@ -121,6 +141,16 @@ impl SubAssign<f64> for Vec3 {
         };
     }
 }
+impl Neg for Vec3{
+    type Output= Self;
+    fn neg(self)->Self{
+        Self{
+            x:-self.x,
+            y:-self.y,
+            z:-self.z,
+        }
+    }
+}
 impl Mul for Vec3 {
     type Output = f64;
 
@@ -137,6 +167,17 @@ impl Mul<f64> for Vec3 {
             x: self.x * other,
             y: self.y * other,
             z: self.z * other,
+        }
+    }
+}
+
+impl Mul<Vec3> for f64{
+    type Output = Vec3;
+    fn mul(self,other:Vec3)->Vec3{
+        Vec3{
+            x:self*other.x,
+            y:self*other.y,
+            z:self*other.z,
         }
     }
 }
@@ -271,7 +312,7 @@ mod tests {
             Vec3::new(1.0, 4.0, 9.0)
         );
     }
-/*
+
     #[test]
     fn test_cross() {
         assert_eq!(
@@ -284,14 +325,14 @@ mod tests {
     fn test_neg() {
         assert_eq!(-Vec3::new(1.0, -2.0, 3.0), Vec3::new(-1.0, 2.0, -3.0));
     }
-    */
+
 
     #[test]
     fn test_squared_length() {
         assert_eq!(Vec3::new(1.0, 2.0, 3.0).squared_length(), 14.0 as f64);
     }
 
-    /*
+
     #[test]
     fn test_length() {
         assert_eq!(
@@ -314,5 +355,5 @@ mod tests {
     fn test_unit_panic() {
         Vec3::new(0.0, 0.0, 0.0).unit();
     }
-    */
+
 }
