@@ -24,7 +24,7 @@ impl<mat:Material> Sphere<mat>{
     }
 }
 impl<mat:Material> Hittable for Sphere<mat>{
-    fn hit(&self, ray: Ray, ray_t:Interval) -> Option<HitRecord>{
+    fn hit(&self, ray: &Ray, ray_t:Interval) -> Option<HitRecord>{
         let oc=self.center-ray.origin;
         let a=ray.direction.squared_length();
         let h=oc*ray.direction;
@@ -52,7 +52,7 @@ impl<mat:Material> Hittable for Sphere<mat>{
             front_face:true,
             material,
         };
-        rec.set_face_normal(ray,normal);
+        rec.set_face_normal(*ray,normal);
         Some(rec)
     }
 }

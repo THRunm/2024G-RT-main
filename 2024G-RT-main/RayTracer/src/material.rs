@@ -1,7 +1,7 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
-
+use crate::camera::random;
 pub trait Material {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)>;
 }
@@ -60,7 +60,13 @@ impl Dielectric {
         Self { refraction_index }
     }
 }
+fn reflectance(cosine:f64,refraction_index:f64)->f64{
+    let mut r0=(1.0-refraction_index)/(1.0+refraction_index);
+    r0=r0*r0;
+    r0+r0*(1.0-cosine).powi(5)
+}
 impl Material for Dielectric {
+
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)> {
         let attenuation = Vec3::new(1.0, 1.0, 1.0);
         let refraction_ratio = if hit_record.front_face {
@@ -72,12 +78,12 @@ impl Material for Dielectric {
         let cos_theta = (-unit_direction * hit_record.normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
-        let direction = if cannot_refract
-        {
+        let direction = if cannot_refract  {
             Vec3::reflect(unit_direction, hit_record.normal)
         } else {
             Vec3::refract(unit_direction, hit_record.normal, refraction_ratio)
         };
+
         let scattered = Ray::new(hit_record.p, direction);
         Some((scattered, attenuation))
     }

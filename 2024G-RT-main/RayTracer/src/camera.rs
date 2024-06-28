@@ -23,7 +23,7 @@ pub struct Camera{
     pub(crate) pixel_delta_x:Vec3,
     pub(crate) pixel_delta_y:Vec3,
 }
-fn random()->f64{
+pub(crate) fn random() ->f64{
     let mut rng = StdRng::from_entropy();
     rng.gen_range(0.0..1.0)
 }
@@ -58,13 +58,13 @@ impl Camera{
             pixel_delta_y
         }
     }
-    pub fn ray_color(r: ray::Ray,depth:u32,world:&Hittable_List) -> vec3::Vec3 {
+    pub fn ray_color(r: &ray::Ray,depth:u32,world:&Hittable_List) -> vec3::Vec3 {
         if depth <= 0 {
             return vec3::Vec3::zero();
         }
         if let Some(hit_record) = world.hit(r, Interval::set(0.001, f64::INFINITY)) {
             if let Some((scattered, attenuation)) = hit_record.material.scatter(&r, &hit_record) {
-                return Vec3::elemul(attenuation, Self::ray_color(scattered, depth - 1, world));
+                return Vec3::elemul(attenuation, Self::ray_color(&scattered, depth - 1, world));
             }
             return vec3::Vec3::zero();
         }
@@ -88,7 +88,7 @@ impl Camera{
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
                     let ray=self.get_ray(f64::from(i),f64::from(j));
-                    pixel_color += Self::ray_color(ray,self.max_depth, &world);
+                    pixel_color += Self::ray_color(&ray,self.max_depth, &world);
                 }
                 write_color(pixel_color*self.pixel_samples_scale, &mut img, i, j);
                 bar.inc(1);
