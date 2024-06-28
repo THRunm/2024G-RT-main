@@ -6,6 +6,7 @@ mod hittable;
 mod hittable_list;
 mod interval;
 mod camera;
+mod material;
 
 
 use color::write_color;
@@ -41,14 +42,21 @@ fn is_ci() -> bool {
 
 
 fn main() {
-    let path = "output/test5.jpg";
+    let path = "output/test11.jpg";
 
 
 
     let mut world =Hittable_List::new();
 
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,0.0,-1.0),0.5)));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0)));
+    let material_ground = material::Lambertian::new(Vec3::new(0.8,0.8,0.0));
+    let material_center = material::Lambertian::new(Vec3::new(0.1,0.2,0.5));
+    let material_left = material::Dielectric::new(1.5);
+    let material_right = material::Metal::new(Vec3::new(0.8,0.6,0.2),1.0);
+
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0,material_ground)));
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,0.0,-1.2),0.5,material_center)));
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(-1.0,0.0,-1.0),0.5,material_left)));
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(1.0,0.0,-1.0),0.5,material_right)));
 
     let camera = camera::Camera::new(400, 16.0/9.0,100);
 

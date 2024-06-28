@@ -15,6 +15,7 @@ pub struct Camera{
     pub(crate) image_width:u32,
     pub(crate) aspect_ratio:f64,
     pub(crate) sample_per_pixel:u32,
+    pub(crate) max_depth:u32,
     pub(crate) pixel_samples_scale:f64,
     pub(crate) image_height:u32,
     pub(crate) center:Vec3,
@@ -43,10 +44,12 @@ impl Camera{
         let lower_left_corner=center-horizontal/2.0-vertical/2.0-Vec3::new(0.0,0.0,focal_length);
         let pixel100_loc=lower_left_corner+(pixel_delta_x+pixel_delta_y)*0.5;
         let pixel_samples_scale=1.0/f64::from(sample_per_pixel);
+        let max_depth:u32=50;
         Camera{
             image_width,
             aspect_ratio,
             sample_per_pixel,
+            max_depth,
             pixel_samples_scale,
             image_height,
             center,
@@ -55,9 +58,15 @@ impl Camera{
             pixel_delta_y
         }
     }
-    pub fn ray_color(r: ray::Ray,world:&Hittable_List) -> vec3::Vec3 {
-        if let Some(hit_record) = world.hit(r, Interval::set(0.0, f64::INFINITY)) {
-            return 0.5 * (hit_record.normal + Vec3::new(1.0, 1.0, 1.0));
+    pub fn ray_color(r: ray::Ray,depth:u32,world:&Hittable_List) -> vec3::Vec3 {
+        if depth <= 0 {
+            return vec3::Vec3::zero();
+        }
+        if let Some(hit_record) = world.hit(r, Interval::set(0.001, f64::INFINITY)) {
+            if let Some((scattered, attenuation)) = hit_record.material.scatter(&r, &hit_record) {
+                return Vec3::elemul(attenuation, Self::ray_color(scattered, depth - 1, world));
+            }
+            return vec3::Vec3::zero();
         }
         let unit_direction = r.direction.unit();
         let t = 0.5 * (unit_direction.y + 1.0);
@@ -79,7 +88,7 @@ impl Camera{
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
                     let ray=self.get_ray(f64::from(i),f64::from(j));
-                    pixel_color += Self::ray_color(ray, &world);
+                    pixel_color += Self::ray_color(ray,self.max_depth, &world);
                 }
                 write_color(pixel_color*self.pixel_samples_scale, &mut img, i, j);
                 bar.inc(1);

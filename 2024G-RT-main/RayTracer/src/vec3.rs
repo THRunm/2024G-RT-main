@@ -2,7 +2,13 @@ use std::ops::{Add, AddAssign, Neg};
 use std::ops::{Sub, SubAssign};
 use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
 
+fn random()->f64{
+    let mut rng = StdRng::from_entropy();
+    rng.gen_range(0.0..1.0)
+}
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub struct Vec3 {
@@ -28,6 +34,9 @@ impl Vec3 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
+    pub fn random()->Vec3{
+        Vec3::new(random(),random(),random())
+    }
     pub fn elemul(a:Vec3, b:Vec3) -> Vec3 {
         Vec3{
             x:a.x*b.x,
@@ -50,6 +59,45 @@ impl Vec3 {
             panic!("Zero length vector cannot be normalized.");
         }
         self / len
+    }
+
+    pub fn random_in_unit_sphere()->Vec3{
+        loop{
+            let p=Vec3::new(random(),random(),random())*2.0-Vec3::ones();
+            if p.squared_length()<1.0{
+                return p;
+            }
+        }
+    }
+
+    pub fn near_zero(&self)->bool{
+        let mut s=1e-8;
+        if self.x.abs()<s && self.y.abs()<s && self.z.abs()<s{
+            return true;
+        }
+        false
+    }
+
+    pub fn random_unit_vector()->Vec3{
+        Vec3::random_in_unit_sphere().unit()
+    }
+
+    pub fn random_in_hemisphere(normal:Vec3)->Vec3{
+        let in_unit_sphere=Vec3::random_in_unit_sphere();
+        if in_unit_sphere*normal>0.0{
+            in_unit_sphere
+        }else{
+            -in_unit_sphere
+        }
+    }
+    pub fn reflect(v:Vec3,n:Vec3)->Vec3{
+        v-2.0*(v*n)*n
+    }
+    pub fn refract(uv:Vec3,n:Vec3,eta_over_eta_prime:f64)->Vec3{
+        let cos_theta=(-uv*n).min(1.0);
+        let r_out_perp=eta_over_eta_prime*(uv+cos_theta*n);
+        let r_out_parallel=-f64::sqrt(f64::abs(1.0-r_out_perp.squared_length()))*n;
+        r_out_perp+r_out_parallel
     }
     pub fn length(&self) -> f64 {
         self.squared_length().sqrt()

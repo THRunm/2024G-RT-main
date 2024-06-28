@@ -1,14 +1,16 @@
 use crate::vec3::Vec3;
 use crate::interval::Interval;
-#[derive(Debug, Copy, Clone)]
-pub struct HitRecord{
+use crate::material::Material;
+#[derive( Copy, Clone)]
+pub struct HitRecord<'a>{
     pub t:f64,
     pub p:Vec3,
     pub normal:Vec3,
     pub front_face:bool,
+    pub material:&'a dyn Material,
 }
 
-impl HitRecord{
+impl<'a> HitRecord<'a>{
     pub(crate) fn set_face_normal(&mut self, ray:crate::ray::Ray, outward_normal:Vec3) {
         self.front_face = ray.direction * outward_normal < 0.0;
         self.normal = match self.front_face {
