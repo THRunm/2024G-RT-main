@@ -16,7 +16,7 @@ pub fn write_color(pixel_color: Vec3, img: &mut RgbImage, i: u32, j: u32) {
     // let pixel = img.get_pixel_mut(i.try_into().unwrap(), j.try_into().unwrap());
     // *pixel = image::Rgb(pixel_color);
     // Write the translated [0,255] value of each color component.
-    let intersity=Interval::set(0.0,0.99);
+    let intersity=Interval::set(0.0,0.999);
     let mut r:f64 = pixel_color.x ;
     let mut g:f64  = pixel_color.y ;
     let mut b:f64  = pixel_color.z ;

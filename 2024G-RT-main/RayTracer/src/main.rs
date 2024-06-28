@@ -15,6 +15,7 @@ use indicatif::ProgressBar;
 use std::fs::File;
 use vec3::Vec3;
 use ray::Ray;
+use crate::camera::Camera;
 use crate::hittable::Hittable;
 use crate::hittable_list::Hittable_List;
 use crate::interval::Interval;
@@ -39,27 +40,62 @@ fn is_ci() -> bool {
 //     }
 //
 // }
+fn random_world()->Hittable_List{
+    let mut world =Hittable_List::new();
+    let material_ground = material::Lambertian::new(Vec3::new(0.5,0.5,0.5));
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-1000.0,-1.0),1000.0,material_ground)));
 
+    for a in -11..11{
+        for b in -11..11 {
+            let choose_mat = camera::random();
+            let center = Vec3::new(a as f64 + 0.9 * camera::random(), 0.2, b as f64 + 0.9 * camera::random());
+            if(center-Vec3::new(4.0,0.2,0.0)).length()>0.9
+            {
+                if(choose_mat<0.8){
+                    let albedo = Vec3::elemul(Vec3::random(),Vec3::random());
+                    let material = material::Lambertian::new(albedo);
+                    world.add(Box::new(sphere::Sphere::new(center,0.2,material)));
+                }
+                else if(choose_mat<0.95){
+                    let albedo = Vec3::random()*0.5+Vec3::new(0.5,0.5,0.5);
+                    let fuzz = camera::random()*0.5;
+                    let material = material::Metal::new(albedo,fuzz);
+                    world.add(Box::new(sphere::Sphere::new(center,0.2,material)));
+                }
+                else{
+                    let material = material::Dielectric::new(1.5);
+                    world.add(Box::new(sphere::Sphere::new(center,0.2,material)));
+                }
+            }
+
+        }
+        }
+    let material1 = material::Dielectric::new(1.5);
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,1.0,0.0),1.0,material1)));
+    let material2 = material::Lambertian::new(Vec3::new(0.4,0.2,0.1));
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(-4.0,1.0,0.0),1.0,material2)));
+    let material3 = material::Metal::new(Vec3::new(0.7,0.6,0.5),0.0);
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(4.0,1.0,0.0),1.0,material3)));
+    world
+
+
+}
 
 fn main() {
-    let path = "output/test11.jpg";
+    let path = "output/test13.png";
 
 
 
-    let mut world =Hittable_List::new();
+    let mut world = random_world();
 
-    let material_ground = material::Lambertian::new(Vec3::new(0.8,0.8,0.0));
-    let material_center = material::Lambertian::new(Vec3::new(0.1,0.2,0.5));
-    let material_left = material::Dielectric::new(1.5);
-    let material_right = material::Metal::new(Vec3::new(0.8,0.6,0.2),0.0);
+    let vfov=20.0;
+    let lookfrom = Vec3::new(13.0,2.0,3.0);
+    let lookat = Vec3::new(0.0,0.0,0.0);
+    let vup=Vec3::new(0.0,1.0,0.0);
 
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-100.5,-1.0),100.0,material_ground)));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,0.0,-1.2),0.5,material_center)));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(-1.0,0.0,-1.0),0.5,material_left)));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(1.0,0.0,-1.0),0.5,material_right)));
-
-    let camera = camera::Camera::new(400, 16.0/9.0,2);
-
+    let defocus_angle=0.6;
+    let focus_dist=10.0;
+    let camera = camera::Camera::new(1200, 16.0/9.0,500,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
     let quality = 100;
 
     camera.render(world, path, quality);

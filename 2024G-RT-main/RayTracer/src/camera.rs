@@ -9,56 +9,95 @@ use crate::color::write_color;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::vec3::Vec3;
-use crate::ray::Ray;    
+use crate::ray::Ray;
 
 pub struct Camera{
     pub(crate) image_width:u32,
     pub(crate) aspect_ratio:f64,
     pub(crate) sample_per_pixel:u32,
     pub(crate) max_depth:u32,
+
+    pub(crate) vfov:f64,
+
+    pub(crate) lookfrom:Vec3,
+    pub(crate) lookat:Vec3,
+    pub(crate) vup:Vec3,
+
+    pub(crate)  defocus_angle:f64,
+    pub(crate) focus_dist:f64,
+
     pub(crate) pixel_samples_scale:f64,
     pub(crate) image_height:u32,
     pub(crate) center:Vec3,
     pub(crate) pixel100_loc:Vec3,
     pub(crate) pixel_delta_x:Vec3,
     pub(crate) pixel_delta_y:Vec3,
+    pub(crate) u:Vec3,
+    pub(crate) v:Vec3,
+    pub(crate) w:Vec3,
+    pub(crate) defocus_disk_x:Vec3,
+    pub(crate) defocus_disk_y:Vec3,
 }
 pub(crate) fn random() ->f64{
     let mut rng = StdRng::from_entropy();
     rng.gen_range(0.0..1.0)
 }
 impl Camera{
-    pub fn new(image_width:u32, aspect_ratio:f64,sample_per_pixel:u32) ->Camera{
+    pub fn new(image_width:u32, aspect_ratio:f64,sample_per_pixel:u32,            vfov:f64,
+               lookfrom:Vec3,
+               lookat:Vec3,
+               vup:Vec3,defocus_angle:f64,
+               focus_dist:f64,  ) ->Camera{
         let image_height = match (image_width as f64 / aspect_ratio) as u32>1  {
             true => (image_width as f64 / aspect_ratio) as u32,
             false => 1,
         };
-        let center=Vec3::new(0.0,0.0,0.0);
-        let viewport_height = 2.0;
+
+        let center=lookfrom;
+        let w=(lookfrom-lookat).unit();
+        let u=Vec3::cross(vup,w).unit();
+        let v=Vec3::cross(w,u);
+        let theta = vfov.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h*focus_dist;
         let viewport_width = aspect_ratio * viewport_height;
-        let focal_length = 1.0;
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical=Vec3::new(0.0,-viewport_height,0.0);
+        let horizontal = u * viewport_width;
+        let vertical = -v * viewport_height;
         let pixel_delta_x=horizontal/f64::from(image_width);
         let pixel_delta_y=vertical/f64::from(image_height);
-        let lower_left_corner=center-horizontal/2.0-vertical/2.0-Vec3::new(0.0,0.0,focal_length);
+        let lower_left_corner=center-(focus_dist*w)-(horizontal/2.0)-(vertical/2.0);
         let pixel100_loc=lower_left_corner+(pixel_delta_x+pixel_delta_y)*0.5;
         let pixel_samples_scale=1.0/f64::from(sample_per_pixel);
         let max_depth:u32=50;
+
+        let defocus_radius=focus_dist*(defocus_angle.to_radians()/2.0).tan();
+        let defocus_disk_x=u*defocus_radius;
+        let defocus_disk_y=v*defocus_radius;
         Camera{
             image_width,
             aspect_ratio,
             sample_per_pixel,
             max_depth,
+            vfov,
+            lookfrom,
+            lookat,
+            vup,
+            defocus_angle,
+            focus_dist,
             pixel_samples_scale,
             image_height,
             center,
             pixel100_loc,
             pixel_delta_x,
-            pixel_delta_y
+            pixel_delta_y,
+            u,
+            v,
+            w,
+            defocus_disk_x,
+            defocus_disk_y,
         }
     }
-    pub fn ray_color(r: &ray::Ray,depth:u32,world:&Hittable_List) -> vec3::Vec3 {
+    pub fn ray_color(r: &Ray,depth:u32,world:&Hittable_List) -> vec3::Vec3 {
         if depth <= 0 {
             return vec3::Vec3::zero();
         }
@@ -107,10 +146,18 @@ impl Camera{
     pub fn sample_squre()->Vec3{
         Vec3::new(random()-0.5,random()-0.5,0.0)
     }
+    pub fn defocus_disk_sample(&self)->Vec3{
+        let p=Vec3::random_in_unit_disk();
+        self.center+self.defocus_disk_x*p.x+self.defocus_disk_y*p.y
+    }
     pub fn get_ray(&self,u:f64,v:f64)->ray::Ray{
         let offset=Self::sample_squre();
         let pixel_sample=self.pixel100_loc+((u+f64::from(offset.x))*self.pixel_delta_x)+((v+f64::from(offset.y))*self.pixel_delta_y);
-        let ray_origin=self.center;
+        let ray_origin=if self.defocus_angle<=0.0{
+            self.center}
+        else {
+            self.defocus_disk_sample()
+        };
         let ray_direction=pixel_sample-self.center;
         ray::Ray::new(ray_origin,ray_direction)
     }
