@@ -8,6 +8,7 @@ use crate::{AUTHOR, is_ci, ray, vec3};
 use crate::color::write_color;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
+use crate::material::Dielectric;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 
@@ -15,7 +16,7 @@ pub struct Camera{
     pub(crate) image_width:u32,
     pub(crate) aspect_ratio:f64,
     pub(crate) sample_per_pixel:u32,
-    pub(crate) max_depth:u32,
+    pub(crate) max_depth:i32,
 
     pub(crate) vfov:f64,
 
@@ -68,7 +69,7 @@ impl Camera{
         let lower_left_corner=center-(focus_dist*w)-(horizontal/2.0)-(vertical/2.0);
         let pixel100_loc=lower_left_corner+(pixel_delta_x+pixel_delta_y)*0.5;
         let pixel_samples_scale=1.0/f64::from(sample_per_pixel);
-        let max_depth:u32=50;
+        let max_depth:i32=50;
 
         let defocus_radius=focus_dist*(defocus_angle.to_radians()/2.0).tan();
         let defocus_disk_x=u*defocus_radius;
@@ -97,13 +98,14 @@ impl Camera{
             defocus_disk_y,
         }
     }
-    pub fn ray_color(r: &Ray,depth:u32,world:&Hittable_List) -> vec3::Vec3 {
+    pub fn ray_color(r: &Ray,depth:i32,world:&Hittable_List) -> vec3::Vec3 {
         if depth <= 0 {
-            return vec3::Vec3::zero();
+            return vec3::Vec3::new(0.0, 0.0, 0.0);
         }
         if let Some(hit_record) = world.hit(r, Interval::set(0.001, f64::INFINITY)) {
             if let Some((scattered, attenuation)) = hit_record.material.scatter(&r, &hit_record) {
-                return Vec3::elemul(attenuation, Self::ray_color(&scattered, depth - 1, world));
+                let color = Self::ray_color(&scattered, depth - 1, world);
+                return Vec3::elemul(attenuation, color);
             }
             return vec3::Vec3::zero();
         }

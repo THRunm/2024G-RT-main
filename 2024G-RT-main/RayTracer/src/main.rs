@@ -82,18 +82,17 @@ fn random_world()->Hittable_List{
 }
 
 fn main() {
-    let path = "output/test13.png";
+    let path = "output/demo.png";
 
 
 
     let mut world = random_world();
-
     let vfov=20.0;
     let lookfrom = Vec3::new(13.0,2.0,3.0);
     let lookat = Vec3::new(0.0,0.0,0.0);
     let vup=Vec3::new(0.0,1.0,0.0);
 
-    let defocus_angle=0.6;
+    let defocus_angle=0.1;
     let focus_dist=10.0;
     let camera = camera::Camera::new(1200, 16.0/9.0,500,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
     let quality = 100;

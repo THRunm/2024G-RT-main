@@ -9,3 +9,9 @@ edition = "2021"
 image = "0.24.2"
 indicatif = "0.16.2" # progress bar
 rand= {version = "0.8.5", features = ["std_rng"] }
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+debug = false
+target-cpu = "native"

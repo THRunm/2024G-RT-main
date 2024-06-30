@@ -73,7 +73,7 @@ pub(crate) fn get_projection_matrix(eye_fov: f64, aspect_ratio: f64, z_near: f64
     let mut m3=Matrix4::identity();
     m3[(0,0)]=1.0/b;
     m3[(1,1)]=1.0/a;
-    m3[(2,2)]=1.0/(z_near-z_far);
+    m3[(2,2)]=2.0/(z_near-z_far);
     projection=m3*m2*m1;
     projection * scale
 }

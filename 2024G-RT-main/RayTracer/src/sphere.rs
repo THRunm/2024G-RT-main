@@ -35,6 +35,9 @@ impl<mat:Material> Hittable for Sphere<mat>{
         }
         let sqrtd=f64::sqrt(discriminant);
         let root = (h-sqrtd)/a;
+        if root==0.0{
+            return None;
+        }
         if(!ray_t.surrounds(root)){
             let root = (h+sqrtd)/a;
             if(!ray_t.surrounds(root)){
