@@ -4,6 +4,7 @@ use std::ops::{Mul, MulAssign};
 use std::ops::{Div, DivAssign};
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use std::ops::{Index, IndexMut};
 
 fn random()->f64{
     let mut rng = StdRng::from_entropy();
@@ -270,6 +271,28 @@ impl DivAssign<f64> for Vec3 {
             y: self.y / other,
             z: self.z / other,
         };
+    }
+}
+
+impl Index<usize> for Vec3 {
+  type Output = f64;
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+           1 => &self.x,
+              2 => &self.y,
+                3 => &self.z,
+                _ => panic!("Invalid index"),
+        }
+    }
+}
+impl IndexMut<usize> for Vec3{
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match index {
+            1 => &mut self.x,
+            2 => &mut self.y,
+            3 => &mut self.z,
+            _ => panic!("Invalid index"),
+        }
     }
 }
 #[cfg(test)]

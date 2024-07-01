@@ -1,5 +1,6 @@
 use std::ops::Neg;
 
+#[derive(Clone, Copy)]
 pub struct Interval {
     pub(crate) min: f64,
     pub(crate) max: f64,
@@ -33,6 +34,12 @@ impl Interval {
     }
     pub fn universe() -> Interval {
         Interval { min: -f64::INFINITY, max: f64::INFINITY }
+    }
+    pub fn expand(&self, delta: f64) -> Interval {
+        Interval { min: self.min - delta/2.0, max: self.max + delta/2.0 }
+    }
+    pub fn intersect(lhs:&Interval,rhs: &Interval) -> Interval {
+        Interval { min: lhs.min.min(rhs.min), max: lhs.max.max(rhs.max) }
     }
     pub fn clamp(&self,x:f64)->f64{
         if x<self.min{

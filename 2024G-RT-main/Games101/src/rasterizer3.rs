@@ -115,9 +115,12 @@ impl Rasterizer {
         let max_x = v[0].x.max(v[1].x).max(v[2].x) as usize;
         let min_y = v[0].y.min(v[1].y).min(v[2].y) as usize;
         let max_y = v[0].y.max(v[1].y).max(v[2].y) as usize;
+        println!("DEBUG 0 {} {}", self.view, self.model);
+        println!("DEBUG 1 >>> {}{}{}{}", min_x, max_x, min_y, max_y);
         for x in min_x..=max_x {
             for y in min_y..=max_y {
                 if !inside_triangle(0.5 + x as f64, 0.5 + y as f64, &new_tri.v) { continue; }
+                println!("DEBUG 2 >< {}{}", x, y);
                 let (alpha, beta, gamma) = compute_barycentric2d(0.5 + x as f64, 0.5 + y as f64, &new_tri.v);
                 let w_reciprocal = 1.0 / (alpha / v[0].w + beta / v[1].w + gamma / v[2].w);
                 let mut z_interpolated = alpha * v[0].z / v[0].w + beta * v[1].z / v[1].w + gamma * v[2].z / v[2].w;
@@ -126,6 +129,7 @@ impl Rasterizer {
                     self.depth_buf[Rasterizer::get_index(self.width, self.height, x, y)] = z_interpolated;
                     let interpolated_color = Self::interpolate_vec3(alpha, beta, gamma,new_tri.color[0], new_tri.color[1], new_tri.color[2], 1.0);
                     let interpolated_normal = Self::interpolate_vec3(alpha, beta, gamma, new_tri.normal[0], new_tri.normal[1], new_tri.normal[2], 1.0).normalize();
+                    print!("{:?}\n", interpolated_normal);
                     let interpolated_texcoords = Self::interpolate_vec2(alpha, beta, gamma, new_tri.tex_coords[0], new_tri.tex_coords[1], new_tri.tex_coords[2], 1.0);
                     let mut payload = FragmentShaderPayload::new(&interpolated_color,&interpolated_normal, &interpolated_texcoords, match &self.texture { None => None, Some(tex) => Some(Rc::new(tex)), });
                     payload.view_pos =  Self::interpolate_vec3(alpha, beta, gamma, view_pos[0], view_pos[1], view_pos[2], 1.0);

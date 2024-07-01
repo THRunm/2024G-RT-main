@@ -7,6 +7,10 @@ mod hittable_list;
 mod interval;
 mod camera;
 mod material;
+mod AABB;
+mod bvh;
+mod texture;
+
 
 
 use color::write_color;
@@ -19,6 +23,7 @@ use crate::camera::Camera;
 use crate::hittable::Hittable;
 use crate::hittable_list::Hittable_List;
 use crate::interval::Interval;
+use crate::texture::Texture;
 
 
 const AUTHOR: &str = "name";
@@ -42,9 +47,8 @@ fn is_ci() -> bool {
 // }
 fn random_world()->Hittable_List{
     let mut world =Hittable_List::new();
-    let material_ground = material::Lambertian::new(Vec3::new(0.5,0.5,0.5));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-1000.0,-1.0),1000.0,material_ground)));
-
+    let checker = Texture::Checker(texture::CheckerTexture::color(0.32, Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9)));
+    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,material::Lambertian::set_texture(checker))));
     for a in -11..11{
         for b in -11..11 {
             let choose_mat = camera::random();
@@ -54,7 +58,8 @@ fn random_world()->Hittable_List{
                 if(choose_mat<0.8){
                     let albedo = Vec3::elemul(Vec3::random(),Vec3::random());
                     let material = material::Lambertian::new(albedo);
-                    world.add(Box::new(sphere::Sphere::new(center,0.2,material)));
+                    let center2 = center+Vec3::new(0.0,camera::random()*0.5,0.0);
+                    world.add(Box::new(sphere::Sphere::set(center,center2,0.2,material)));
                 }
                 else if(choose_mat<0.95){
                     let albedo = Vec3::random()*0.5+Vec3::new(0.5,0.5,0.5);
@@ -82,7 +87,7 @@ fn random_world()->Hittable_List{
 }
 
 fn main() {
-    let path = "output/demo.png";
+    let path = "output1/test2.png";
 
 
 
@@ -94,7 +99,7 @@ fn main() {
 
     let defocus_angle=0.1;
     let focus_dist=10.0;
-    let camera = camera::Camera::new(1200, 16.0/9.0,500,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
+    let camera = camera::Camera::new(400, 16.0/9.0,50,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
     let quality = 100;
 
     camera.render(world, path, quality);

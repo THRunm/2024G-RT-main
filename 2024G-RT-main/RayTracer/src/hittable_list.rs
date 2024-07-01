@@ -1,3 +1,4 @@
+use crate::AABB::aabb;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::hittable::HitRecord;
@@ -6,16 +7,24 @@ use crate::interval::Interval;
 
 pub struct Hittable_List{
     pub objects:Vec<Box<dyn Hittable>>,
+    pub bbox:Option<aabb>,
 }
 
 impl Hittable_List{
     pub fn new()->Hittable_List{
         Hittable_List{
             objects:Vec::new(),
+            bbox:None,
         }
     }
     pub fn add(&mut self,object:Box<dyn Hittable>){
-        self.objects.push(object);
+        self.objects.push(object.clone());
+        if self.bbox.is_none(){
+            self.bbox= Option::from(object.bounding_box().unwrap());
+    }
+        else {
+            self.bbox=Option::from(aabb::surrounding_box(self.bbox.unwrap(),object.bounding_box().unwrap()));
+        }
     }
 
     pub fn clear(&mut self){
@@ -35,4 +44,8 @@ impl Hittable for Hittable_List{
         }
         rec
     }
+    fn bounding_box(self) -> Option<aabb> {
+        return self.bbox;
+    }
+
 }

@@ -2,16 +2,21 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 use crate::camera::random;
+use crate::texture::Texture;
+
 pub trait Material {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)>;
 }
 
 pub struct Lambertian {
-    pub albedo: Vec3,
+    pub tex: Texture,
 }
 impl Lambertian {
     pub fn new(albedo: Vec3) -> Self {
-        Self { albedo }
+        Self { tex: Texture::SolidColor(albedo)}
+    }
+    pub fn set_texture(tex: Texture)->Self {
+        Self { tex }
     }
 }
 impl Material for Lambertian {
@@ -20,8 +25,8 @@ impl Material for Lambertian {
         if scatter_direction.near_zero() {
             scatter_direction = hit_record.normal;
         }
-        let scattered = Ray::new(hit_record.p, scatter_direction);
-        let attenuation = self.albedo;
+        let scattered = Ray::new_time(hit_record.p, scatter_direction, _r_in.time);
+        let attenuation = self.tex.value(hit_record.u, hit_record.v, &hit_record.p);
         Some((scattered, attenuation))
     }
 }
@@ -42,7 +47,7 @@ impl Material for Metal {
     fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)> {
         let mut reflected = Vec3::reflect(r_in.direction.unit(), hit_record.normal);
         reflected =reflected.unit()+Vec3::random_unit_vector()*self.fuzz;
-        let scattered = Ray::new(hit_record.p, reflected);
+        let scattered = Ray::new_time(hit_record.p, reflected, r_in.time);
         let attenuation = self.albedo;
         if scattered.direction * hit_record.normal > 0.0 {
             Some((scattered, attenuation))
@@ -84,7 +89,7 @@ impl Material for Dielectric {
             Vec3::refract(unit_direction, hit_record.normal, refraction_ratio)
         };
 
-        let scattered = Ray::new(hit_record.p, direction);
+        let scattered = Ray::new_time(hit_record.p, direction, r_in.time);
         Some((scattered, attenuation))
     }
 }
