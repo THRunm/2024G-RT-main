@@ -48,9 +48,9 @@ impl aabb {
         let mut ray_t=ray_t;
         for i in 0..3{
             let ax=self.axis_interval(i);
-            let adinv=1.0/ray_direction[i];
-            let mut t0=(ax.min-ray_origin[i])*adinv;
-            let mut t1=(ax.max-ray_origin[i])*adinv;
+            let adinv=1.0/ray_direction[i.try_into().unwrap()];
+            let mut t0=(ax.min-ray_origin[i.try_into().unwrap()])*adinv;
+            let mut t1=(ax.max-ray_origin[i.try_into().unwrap()])*adinv;
             if (t0<t1){
                 if(t0>ray_t.min){
                     ray_t.min=t0;

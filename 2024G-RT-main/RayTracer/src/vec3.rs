@@ -278,9 +278,9 @@ impl Index<usize> for Vec3 {
   type Output = f64;
     fn index(&self, index: usize) -> &Self::Output {
         match index {
-           1 => &self.x,
-              2 => &self.y,
-                3 => &self.z,
+           0 => &self.x,
+              1 => &self.y,
+                2 => &self.z,
                 _ => panic!("Invalid index"),
         }
     }
@@ -288,9 +288,9 @@ impl Index<usize> for Vec3 {
 impl IndexMut<usize> for Vec3{
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         match index {
-            1 => &mut self.x,
-            2 => &mut self.y,
-            3 => &mut self.z,
+            0 => &mut self.x,
+            1 => &mut self.y,
+            2 => &mut self.z,
             _ => panic!("Invalid index"),
         }
     }

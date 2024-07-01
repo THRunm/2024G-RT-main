@@ -17,6 +17,7 @@ use color::write_color;
 use image::{ImageBuffer, RgbImage}; //接收render传回来的图片，在main中文件输出
 use indicatif::ProgressBar;
 use std::fs::File;
+use std::sync::Arc;
 use vec3::Vec3;
 use ray::Ray;
 use crate::camera::Camera;
@@ -47,8 +48,8 @@ fn is_ci() -> bool {
 // }
 fn random_world()->Hittable_List{
     let mut world =Hittable_List::new();
-    let checker = Texture::Checker(texture::CheckerTexture::color(0.32, Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9)));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,material::Lambertian::set_texture(checker))));
+    let checker = Texture::Checker(Box::new(texture::CheckerTexture::color(0.32, Vec3::new(0.2, 0.3, 0.1), Vec3::new(0.9, 0.9, 0.9))));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,material::Lambertian::set_texture(checker))));
     for a in -11..11{
         for b in -11..11 {
             let choose_mat = camera::random();
@@ -59,39 +60,41 @@ fn random_world()->Hittable_List{
                     let albedo = Vec3::elemul(Vec3::random(),Vec3::random());
                     let material = material::Lambertian::new(albedo);
                     let center2 = center+Vec3::new(0.0,camera::random()*0.5,0.0);
-                    world.add(Box::new(sphere::Sphere::set(center,center2,0.2,material)));
+                    world.add(Arc::new(sphere::Sphere::set(center,center2,0.2,material)));
                 }
                 else if(choose_mat<0.95){
                     let albedo = Vec3::random()*0.5+Vec3::new(0.5,0.5,0.5);
                     let fuzz = camera::random()*0.5;
                     let material = material::Metal::new(albedo,fuzz);
-                    world.add(Box::new(sphere::Sphere::new(center,0.2,material)));
+                    world.add(Arc::new(sphere::Sphere::new(center,0.2,material)));
                 }
                 else{
                     let material = material::Dielectric::new(1.5);
-                    world.add(Box::new(sphere::Sphere::new(center,0.2,material)));
+                    world.add(Arc::new(sphere::Sphere::new(center,0.2,material)));
                 }
             }
 
         }
         }
     let material1 = material::Dielectric::new(1.5);
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(0.0,1.0,0.0),1.0,material1)));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(0.0,1.0,0.0),1.0,material1)));
     let material2 = material::Lambertian::new(Vec3::new(0.4,0.2,0.1));
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(-4.0,1.0,0.0),1.0,material2)));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(-4.0,1.0,0.0),1.0,material2)));
     let material3 = material::Metal::new(Vec3::new(0.7,0.6,0.5),0.0);
-    world.add(Box::new(sphere::Sphere::new(Vec3::new(4.0,1.0,0.0),1.0,material3)));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(4.0,1.0,0.0),1.0,material3)));
     world
 
 
 }
 
 fn main() {
-    let path = "output1/test2.png";
+    let path = "output1/test3.png";
 
 
 
     let mut world = random_world();
+    let world_=bvh::BVH_Node::set(world);
+    world=Hittable_List::set(Arc::new(world_));
     let vfov=20.0;
     let lookfrom = Vec3::new(13.0,2.0,3.0);
     let lookat = Vec3::new(0.0,0.0,0.0);

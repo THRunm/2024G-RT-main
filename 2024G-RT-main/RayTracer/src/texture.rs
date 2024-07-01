@@ -4,7 +4,7 @@ use crate::vec3::Vec3;
 
 pub enum Texture{
     SolidColor(Vec3),
-    Checker(CheckerTexture),
+    Checker(Box<CheckerTexture>),
 }
 
 
@@ -16,10 +16,10 @@ impl Texture{
         }
     }
     pub fn color(scale:f64,c1:Vec3,c2:Vec3)->Self{
-        Texture::Checker(CheckerTexture::color(scale,c1,c2))
+        Texture::Checker(Box::new(CheckerTexture::color(scale,c1,c2)) )
     }
     pub fn new(odd:Texture,even:Texture,scale:f64)->Self{
-        Texture::Checker(CheckerTexture::new(odd,even,scale))
+        Texture::Checker(Box::new(CheckerTexture::new(Box::new(odd),Box::new(even),scale)))
     }
     pub fn solid_color(color:Vec3)->Self{
         Texture::SolidColor(color)}
@@ -30,11 +30,11 @@ pub struct SolidColor{
 }
 pub struct CheckerTexture{
     inv_scale: f64,
-    pub(crate) odd:Texture,
-    pub(crate) even:Texture,
+    pub(crate) odd:Box<Texture>,
+    pub(crate) even:Box<Texture>,
 }
 impl CheckerTexture{
-    pub fn new(odd:Texture,even:Texture,scale:f64)->Self{
+    pub fn new(odd:Box<Texture>,even:Box<Texture>,scale:f64)->Self{
         Self{
             inv_scale:1.0/scale,
             odd,
@@ -44,8 +44,8 @@ impl CheckerTexture{
     pub fn color(scale:f64,c1:Vec3,c2:Vec3)->Self{
         Self{
             inv_scale:1.0/scale,
-            even:Texture::new(c1),
-            odd:Texture::new(c2),
+            even:Box::new(Texture::SolidColor(c1)),
+            odd:Box::new(Texture::SolidColor(c2)),
         }
     }
     pub fn value(&self,u:f64,v:f64,p:&Vec3)->Vec3{

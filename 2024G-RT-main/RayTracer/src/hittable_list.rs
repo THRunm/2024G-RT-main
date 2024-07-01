@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use crate::AABB::aabb;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
@@ -6,7 +7,7 @@ use crate::hittable::Hittable;
 use crate::interval::Interval;
 
 pub struct Hittable_List{
-    pub objects:Vec<Box<dyn Hittable>>,
+    pub objects:Vec<Arc<dyn Hittable>>,
     pub bbox:Option<aabb>,
 }
 
@@ -17,7 +18,13 @@ impl Hittable_List{
             bbox:None,
         }
     }
-    pub fn add(&mut self,object:Box<dyn Hittable>){
+    pub fn set(objects:Arc<dyn Hittable>)->Hittable_List{
+        let mut list=Hittable_List::new();
+        list.add(objects);
+        list
+    }
+
+    pub fn add(&mut self,object:Arc<dyn Hittable>){
         self.objects.push(object.clone());
         if self.bbox.is_none(){
             self.bbox= Option::from(object.bounding_box().unwrap());
@@ -44,7 +51,7 @@ impl Hittable for Hittable_List{
         }
         rec
     }
-    fn bounding_box(self) -> Option<aabb> {
+    fn bounding_box(&self) -> Option<aabb> {
         return self.bbox;
     }
 

@@ -94,7 +94,7 @@ impl<mat:Material> Hittable for Sphere<mat>{
         rec.set_face_normal(*ray,normal);
         Some(rec)
     }
-    fn bounding_box(self) -> Option<aabb> {
+    fn bounding_box(&self) -> Option<aabb> {
         Some(self.bbox)
     }
 }
