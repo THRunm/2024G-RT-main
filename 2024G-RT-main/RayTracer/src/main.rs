@@ -7,11 +7,11 @@ mod hittable_list;
 mod interval;
 mod camera;
 mod material;
-mod aabb;
+mod AABB;
 mod bvh;
 mod texture;
 mod image_;
-// mod perlin;
+mod perlin;
 
 
 use std::sync::Arc;
@@ -77,7 +77,7 @@ fn bouncing_spheres(path: &str) {
 
     let defocus_angle=0.1;
     let focus_dist=10.0;
-    let camera = camera::Camera::new(400, 16.0/9.0,50,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
+    let camera = camera::Camera::new(1200, 16.0/9.0,500,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
     let quality = 100;
 
     camera.render(world, path, quality);}
@@ -94,7 +94,7 @@ fn checkered_spheres(path: &str) {
 
     let defocus_angle=0.0;
     let focus_dist=10.0;
-    let camera = camera::Camera::new(400, 16.0/9.0,2,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
+    let camera = camera::Camera::new(1200, 16.0/9.0,500,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
     let quality = 100;
 
     camera.render(world, path, quality);
@@ -116,13 +116,31 @@ fn earth(path: &str){
 
     camera.render(world, path, quality);
 }
+fn perlin_spheres(path: &str) {
+    let mut world = HittableList::new();
+    let perlin_texture = Texture::Noise(texture::NoiseTexture::new(2.0));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(0.0,-1000.0,0.0),1000.0,material::Lambertian::set_texture(perlin_texture))));
+    let perlin_texture = Texture::Noise(texture::NoiseTexture::new(2.0));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(0.0,2.0,0.0),2.0,material::Lambertian::set_texture(perlin_texture))))  ;
+    let vfov=20.0;
+    let lookfrom = Vec3::new(13.0,2.0,3.0);
+    let lookat = Vec3::new(0.0,0.0,0.0);
+    let vup=Vec3::new(0.0,1.0,0.0);
+
+    let defocus_angle=0.0;
+    let focus_dist=10.0;
+    let camera = camera::Camera::new(400, 16.0/9.0,100,   vfov,lookfrom,lookat,vup,defocus_angle,focus_dist);
+    let quality = 100;
+    camera.render(world, path, quality);
+}
 fn main() {
-    let path = "output1/test6.png";
-    let mode=3;
+    let path = "output1/test9.png";
+    let mode=4;
     match mode {
         1 => bouncing_spheres(path),
         2 => checkered_spheres(path),
         3 => earth(path),
+        4 => perlin_spheres(path),
         _ => bouncing_spheres(path),
     }
 
