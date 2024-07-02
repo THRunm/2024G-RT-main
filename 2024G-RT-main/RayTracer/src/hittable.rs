@@ -1,4 +1,4 @@
-use crate::AABB::aabb;
+use crate::AABB::Aabb;
 use crate::vec3::Vec3;
 use crate::interval::Interval;
 use crate::material::Material;
@@ -25,5 +25,5 @@ impl<'a> HitRecord<'a>{
 
 pub trait Hittable:{
     fn hit(&self,ray:&crate::ray::Ray,ray_t:Interval)->Option<HitRecord>;
-    fn bounding_box(&self)->Option<aabb>;
+    fn bounding_box(&self)->Option<Aabb>;
 }

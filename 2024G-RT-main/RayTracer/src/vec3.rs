@@ -72,7 +72,7 @@ impl Vec3 {
     }
 
     pub fn near_zero(&self)->bool{
-        let mut s=1e-8;
+        let s=1e-8;
         if self.x.abs()<s && self.y.abs()<s && self.z.abs()<s{
             return true;
         }

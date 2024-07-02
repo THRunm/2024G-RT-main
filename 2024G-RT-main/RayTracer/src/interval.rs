@@ -1,4 +1,3 @@
-use std::ops::Neg;
 
 #[derive(Clone, Copy)]
 pub struct Interval {

@@ -1,59 +1,59 @@
 use std::sync::Arc;
-use crate::AABB::aabb;
+use crate::AABB::Aabb;
 use crate::hittable::{HitRecord, Hittable};
-use crate::hittable_list::Hittable_List;
+use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 
-pub struct BVH_Node{
+pub struct BvhNode {
     pub left: Arc<dyn Hittable>,
     pub right: Arc<dyn Hittable>,
-    pub bbox: aabb,
+    pub bbox: Aabb,
 }
 
-impl BVH_Node{
-    pub fn new(objects: &[Arc<dyn Hittable>], start: usize, end: usize) -> BVH_Node {
-        let mut bbox = aabb::new(Interval::empty(), Interval::empty(), Interval::empty());
+impl BvhNode {
+    pub fn new(objects: &[Arc<dyn Hittable>], start: usize, end: usize) -> BvhNode {
+        let mut bbox = Aabb::new(Interval::empty(), Interval::empty(), Interval::empty());
         for i in start..end {
             let temp_bbox = objects[i].bounding_box().unwrap();
-            bbox = aabb::surrounding_box(bbox, temp_bbox);
+            bbox = Aabb::surrounding_box(bbox, temp_bbox);
         }
         let axis = bbox.longest_axis();
         let comparator = match axis {
-            0 => BVH_Node::box_x_compare,
-            1 => BVH_Node::box_y_compare,
-            2 => BVH_Node::box_z_compare,
-            _ => BVH_Node::box_x_compare,
+            0 => BvhNode::box_x_compare,
+            1 => BvhNode::box_y_compare,
+            2 => BvhNode::box_z_compare,
+            _ => BvhNode::box_x_compare,
         };
         let object_span = end - start;
         if object_span == 1 {
-            return BVH_Node {
+            return BvhNode {
                 left: Arc::clone(&objects[start]),
                 right: Arc::clone(&objects[start]),
                 bbox: objects[start].bounding_box().unwrap(),
             };
         } else if object_span == 2 {
-            return BVH_Node {
+            return BvhNode {
                 left: Arc::clone(&objects[start]),
                 right: Arc::clone(&objects[start + 1]),
-                bbox: aabb::surrounding_box(objects[start].bounding_box().unwrap(), objects[start + 1].bounding_box().unwrap()),
+                bbox: Aabb::surrounding_box(objects[start].bounding_box().unwrap(), objects[start + 1].bounding_box().unwrap()),
             };
         } else {
             let mut sorted_objects = objects.to_vec();
             sorted_objects[start..end].sort_by(|a, b| if comparator(a, b) { std::cmp::Ordering::Less } else { std::cmp::Ordering::Greater });
             let mid = start + object_span / 2;
-            let left = BVH_Node::new(&sorted_objects, start, mid);
-            let right = BVH_Node::new(&sorted_objects, mid, end);
-            let bbox=aabb::surrounding_box(left.bbox, right.bbox);
-            return BVH_Node {
+            let left = BvhNode::new(&sorted_objects, start, mid);
+            let right = BvhNode::new(&sorted_objects, mid, end);
+            let bbox= Aabb::surrounding_box(left.bbox, right.bbox);
+            return BvhNode {
                 left: Arc::new(left),
                 right: Arc::new(right),
                 bbox,
             };
         }
-    }    pub fn set(lise:Hittable_List)->BVH_Node{
-        let mut objects=lise.objects;
+    }    pub fn set(lise: HittableList) -> BvhNode {
+        let objects=lise.objects;
         let size=objects.len();
-        BVH_Node::new(&objects,0,size)
+        BvhNode::new(&objects, 0, size)
     }
     pub fn box_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>,axis:usize)->bool{
         let box_a=a.bounding_box().unwrap();
@@ -66,19 +66,19 @@ impl BVH_Node{
         }
     }
     pub fn box_x_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>)->bool{
-        BVH_Node::box_compare(a,b,0)
+        BvhNode::box_compare(a, b, 0)
     }
     pub fn box_y_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>)->bool{
-        BVH_Node::box_compare(a,b,1)
+        BvhNode::box_compare(a, b, 1)
     }
     pub fn box_z_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>)->bool{
-        BVH_Node::box_compare(a,b,2)
+        BvhNode::box_compare(a, b, 2)
     }
 
 }
-impl Hittable for BVH_Node{
+impl Hittable for BvhNode {
     fn hit(&self, ray: &crate::ray::Ray, ray_t:Interval) -> Option<HitRecord> {
-        if(!self.bbox.hit(ray,ray_t)){
+        if !self.bbox.hit(ray,ray_t) {
             return None;
         }
         let left_hit=self.left.hit(ray,ray_t);
@@ -90,7 +90,7 @@ impl Hittable for BVH_Node{
             (Some(left),Some(right))=>if left.t<right.t{Some(left)}else{Some(right)},
         }
     }
-    fn bounding_box(&self) -> Option<aabb> {
+    fn bounding_box(&self) -> Option<Aabb> {
         return Option::from(self.bbox);
     }
 

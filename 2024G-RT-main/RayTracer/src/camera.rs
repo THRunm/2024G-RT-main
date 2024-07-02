@@ -3,12 +3,11 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
-use crate::hittable_list::Hittable_List;
+use crate::hittable_list::HittableList;
 use crate::{AUTHOR, is_ci, ray, vec3};
 use crate::color::write_color;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
-use crate::material::Dielectric;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 
@@ -98,7 +97,7 @@ impl Camera{
             defocus_disk_y,
         }
     }
-    pub fn ray_color(r: &Ray,depth:i32,world:&Hittable_List) -> vec3::Vec3 {
+    pub fn ray_color(r: &Ray, depth:i32, world:&HittableList) -> vec3::Vec3 {
         if depth <= 0 {
             return vec3::Vec3::new(0.0, 0.0, 0.0);
         }
@@ -113,7 +112,7 @@ impl Camera{
         let t = 0.5 * (unit_direction.y + 1.0);
         vec3::Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + vec3::Vec3::new(0.5, 0.7, 1.0) * t
     }
-    pub fn render(&self,world:Hittable_List,path:&str,quality:u8){
+    pub fn render(&self, world: HittableList, path:&str, quality:u8){
         let bar: ProgressBar = if is_ci() {
             ProgressBar::hidden()
         } else {
@@ -123,7 +122,7 @@ impl Camera{
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
         // 以下是write color和process bar的示例代码
-        let pixel_color = [255u8; 3];
+        let _pixel_color = [255u8; 3];
         for i in 0..self.image_width {
             for j in 0..self.image_height {
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);

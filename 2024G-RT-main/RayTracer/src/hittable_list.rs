@@ -1,25 +1,24 @@
 use std::sync::Arc;
-use crate::AABB::aabb;
-use crate::vec3::Vec3;
+use crate::AABB::Aabb;
 use crate::ray::Ray;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 
-pub struct Hittable_List{
+pub struct HittableList {
     pub objects:Vec<Arc<dyn Hittable>>,
-    pub bbox:Option<aabb>,
+    pub bbox:Option<Aabb>,
 }
 
-impl Hittable_List{
-    pub fn new()->Hittable_List{
-        Hittable_List{
+impl HittableList {
+    pub fn new()-> HittableList {
+        HittableList {
             objects:Vec::new(),
             bbox:None,
         }
     }
-    pub fn set(objects:Arc<dyn Hittable>)->Hittable_List{
-        let mut list=Hittable_List::new();
+    pub fn set(objects:Arc<dyn Hittable>)-> HittableList {
+        let mut list= HittableList::new();
         list.add(objects);
         list
     }
@@ -30,7 +29,7 @@ impl Hittable_List{
             self.bbox= Option::from(object.bounding_box().unwrap());
     }
         else {
-            self.bbox=Option::from(aabb::surrounding_box(self.bbox.unwrap(),object.bounding_box().unwrap()));
+            self.bbox=Option::from(Aabb::surrounding_box(self.bbox.unwrap(), object.bounding_box().unwrap()));
         }
     }
 
@@ -39,7 +38,7 @@ impl Hittable_List{
     }
 }
 
-impl Hittable for Hittable_List{
+impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, ray_t:Interval) -> Option<HitRecord> {
         let mut rec:Option<HitRecord>=None;
         let mut closest_so_far=ray_t.max();
@@ -51,7 +50,7 @@ impl Hittable for Hittable_List{
         }
         rec
     }
-    fn bounding_box(&self) -> Option<aabb> {
+    fn bounding_box(&self) -> Option<Aabb> {
         return self.bbox;
     }
 

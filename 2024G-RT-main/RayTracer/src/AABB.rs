@@ -3,32 +3,32 @@ use crate::ray::Ray;
 use crate::vec3::Vec3;
 
 #[derive( Copy, Clone)]
-pub(crate) struct aabb{
+pub(crate) struct Aabb {
     pub(crate) x:Interval,
     pub(crate) y:Interval,
     pub(crate) z:Interval,
 }
 
-impl aabb {
-    pub fn new(x:Interval,y:Interval,z:Interval)->aabb{
-        aabb{
+impl Aabb {
+    pub fn new(x:Interval,y:Interval,z:Interval)-> Aabb {
+        Aabb {
             x,
             y,
             z,
         }
     }
-    pub fn set(a:Vec3,b:Vec3)->aabb{
+    pub fn set(a:Vec3,b:Vec3)-> Aabb {
         let x=if a.x>b.x{Interval::set(b.x,a.x)}else{Interval::set(a.x,b.x)};
         let y=if a.y>b.y{Interval::set(b.y,a.y)}else{Interval::set(a.y,b.y)};
         let z=if a.z>b.z{Interval::set(b.z,a.z)}else{Interval::set(a.z,b.z)};
-        aabb{
+        Aabb {
             x,
             y,
             z,
         }
     }
-    pub fn surrounding_box(box0:aabb,box1:aabb)->aabb{
-        aabb{
+    pub fn surrounding_box(box0: Aabb, box1: Aabb) -> Aabb {
+        Aabb {
             x:Interval::intersect(&box0.x,&box1.x),
             y:Interval::intersect(&box0.y,&box1.y),
             z:Interval::intersect(&box0.z,&box1.z),
@@ -49,21 +49,21 @@ impl aabb {
         for i in 0..3{
             let ax=self.axis_interval(i);
             let adinv=1.0/ray_direction[i.try_into().unwrap()];
-            let mut t0=(ax.min-ray_origin[i.try_into().unwrap()])*adinv;
-            let mut t1=(ax.max-ray_origin[i.try_into().unwrap()])*adinv;
-            if (t0<t1){
-                if(t0>ray_t.min){
+            let t0=(ax.min-ray_origin[i.try_into().unwrap()])*adinv;
+            let t1=(ax.max-ray_origin[i.try_into().unwrap()])*adinv;
+            if t0<t1 {
+                if t0>ray_t.min {
                     ray_t.min=t0;
                 }
-                if(t1<ray_t.max){
+                if t1<ray_t.max {
                     ray_t.max=t1;
                 }
             }
             else{
-                if(t1>ray_t.min){
+                if t1>ray_t.min {
                     ray_t.min=t1;
                 }
-                if(t0<ray_t.max){
+                if t0<ray_t.max {
                     ray_t.max=t0;
                 }
             }

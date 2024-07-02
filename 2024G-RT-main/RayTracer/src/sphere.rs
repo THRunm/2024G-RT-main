@@ -1,22 +1,23 @@
-use crate::AABB::aabb;
+use crate::AABB::Aabb;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use crate::hittable::HitRecord;
 use crate::hittable::Hittable;
 use crate::interval::Interval;
 use crate::material::Material;
+use num_traits::float::FloatConst;
 
-pub struct Sphere<mat:Material>{
+pub struct Sphere<Mat:Material>{
     pub center1:Vec3,
     pub radius:f64,
-    pub material:mat,
+    pub material:Mat,
     pub is_moving:bool,
     pub center_vec:Vec3,
-    pub bbox:aabb,
+    pub bbox: Aabb,
 
 }
-impl<mat:Material> Sphere<mat>{
-    pub fn new(center:Vec3, radius:f64, material: mat) ->Self{
+impl<Mat:Material> Sphere<Mat>{
+    pub fn new(center:Vec3, radius:f64, material: Mat) ->Self{
         let radius=match radius>0.0{
             true=>radius,
             false=>0.0,
@@ -28,18 +29,18 @@ impl<mat:Material> Sphere<mat>{
             material,
             is_moving:false,
             center_vec:Vec3::new(0.0,0.0,0.0),
-            bbox:aabb::set(center-rvec,center+rvec),
+            bbox: Aabb::set(center-rvec, center+rvec),
         }
     }
-    pub fn set(center1:Vec3,center2:Vec3,radius:f64,material:mat)->Self{
+    pub fn set(center1:Vec3,center2:Vec3,radius:f64,material:Mat)->Self{
         let radius=match radius>0.0{
             true=>radius,
             false=>0.0,
         };
         let rvec=Vec3::new(radius,radius,radius);
-        let box1=aabb::set(center1-rvec,center1+rvec);
-        let box2=aabb::set(center2-rvec,center2+rvec);
-        let bbox=aabb::surrounding_box(box1,box2);
+        let box1= Aabb::set(center1-rvec, center1+rvec);
+        let box2= Aabb::set(center2-rvec, center2+rvec);
+        let bbox= Aabb::surrounding_box(box1, box2);
         Sphere{
             center1,
             radius,
@@ -55,8 +56,15 @@ impl<mat:Material> Sphere<mat>{
         }
         self.center1
     }
+    pub fn get_sphere_uv(p:Vec3)->(f64,f64){
+        let theta=f64::acos(-p.y);
+        let phi=f64::atan2(-p.z,p.x)+f64::PI();
+        let u=phi/(2.0*f64::PI());
+        let v=theta/f64::PI();
+        (u,v)
+    }
 }
-impl<mat:Material> Hittable for Sphere<mat>{
+impl<Mat:Material> Hittable for Sphere<Mat>{
     fn hit(&self, ray: &Ray, ray_t:Interval) -> Option<HitRecord>{
         let center=self.sphere_center(ray.time);
         let oc=center-ray.origin;
@@ -72,9 +80,9 @@ impl<mat:Material> Hittable for Sphere<mat>{
         if root==0.0{
             return None;
         }
-        if(!ray_t.surrounds(root)){
+        if !ray_t.surrounds(root) {
             let root = (h+sqrtd)/a;
-            if(!ray_t.surrounds(root)){
+            if !ray_t.surrounds(root) {
                 return None;
             }
         }
@@ -82,11 +90,12 @@ impl<mat:Material> Hittable for Sphere<mat>{
         let p=ray.at(t);
         let normal=(p-center)/self.radius;
         let material=&self.material;
+        let(u,v)=Sphere::<Mat>::get_sphere_uv((p-center)/self.radius);
         let mut rec=HitRecord{
             t,
             p,
-            u:0.0,
-            v:0.0,
+            u,
+            v,
             normal,
             front_face:true,
             material,
@@ -94,7 +103,7 @@ impl<mat:Material> Hittable for Sphere<mat>{
         rec.set_face_normal(*ray,normal);
         Some(rec)
     }
-    fn bounding_box(&self) -> Option<aabb> {
+    fn bounding_box(&self) -> Option<Aabb> {
         Some(self.bbox)
     }
 }
