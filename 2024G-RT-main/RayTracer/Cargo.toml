@@ -10,6 +10,8 @@ image = "0.24.2"
 indicatif = "0.16.2" # progress bar
 rand= {version = "0.8.5", features = ["std_rng"] }
 num-traits = "0.2.19"
+log = "0.4.22"
+rayon = "1.10.0"
 [profile.release]
 opt-level = 3
 lto = true

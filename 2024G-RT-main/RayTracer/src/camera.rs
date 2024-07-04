@@ -3,6 +3,7 @@ use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use rayon::prelude::ParallelBridge;
 use crate::hittable_list::HittableList;
 use crate::{AUTHOR, is_ci, ray, vec3};
 use crate::color::write_color;
@@ -10,6 +11,8 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
+use rayon::iter::ParallelIterator;
+
 
 pub struct Camera{
     pub(crate) image_width:u32,
@@ -124,31 +127,27 @@ impl Camera{
 
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
-        // 以下是write color和process bar的示例代码
-        let _pixel_color = [255u8; 3];
-        for i in 0..self.image_width {
-            for j in 0..self.image_height {
-                if i==250 && j== 300{
-                    println!("{} {}",i,j);
-                }
-                let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
+        img.enumerate_pixels_mut().par_bridge().for_each(|(x, y, pixel)| {
+            let mut pixel_color = Vec3::new(1110.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
-                    let ray=self.get_ray(f64::from(i),f64::from(j));
-                    pixel_color += self.ray_color(&ray,self.max_depth, &world);
-                }
-                write_color(pixel_color*self.pixel_samples_scale, &mut img, i, j);
-                bar.inc(1);
+                    let u = x as f64 + random();
+                let v = y as f64 + random();
+                let ray = self.get_ray(u, v);
+                pixel_color += self.ray_color(&ray, self.max_depth, &world);
             }
-        }
+            pixel_color *= self.pixel_samples_scale;
+            let r = (255.99 * pixel_color.x.min(1.0).sqrt()) as u8;
+            let g = (255.99 * pixel_color.y.min(1.0).sqrt()) as u8;
+            let b = (255.99 * pixel_color.z.min(1.0).sqrt()) as u8;
+            *pixel = image::Rgb([r, g, b]);
+            bar.inc(1);
+        });
         bar.finish();
-
-        println!("Ouput image as \"{}\"\n Author: {}", path, AUTHOR);
-        let output_image: image::DynamicImage = image::DynamicImage::ImageRgb8(img);
-        let mut output_file: File = File::create(path).unwrap();
-        match output_image.write_to(&mut output_file, image::ImageOutputFormat::Jpeg(quality)) {
-            Ok(_) => {}
-            Err(_) => println!("Outputting image fails."),
-        }
+        // 保存图像到文件
+        let output_image = image::DynamicImage::ImageRgb8(img);
+        let mut output_file = File::create(path).expect("Failed to create file");
+        output_image.write_to(&mut output_file, image::ImageOutputFormat::Jpeg(quality))
+            .expect("Failed to write image");
     }
     pub fn set_background(&mut self,background:Vec3){
         self.background=background;

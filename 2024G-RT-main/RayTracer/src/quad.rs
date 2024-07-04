@@ -7,7 +7,7 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-pub struct quad <Mat: Material> {
+pub struct quad <Mat: Material+ Sync + Send> {
     pub(crate) q: Vec3,
     pub(crate) u: Vec3,
     pub(crate) v: Vec3,
@@ -18,7 +18,7 @@ pub struct quad <Mat: Material> {
     pub(crate) normal: Vec3,
 }
 
-impl<Mat: Material + Clone + 'static>   quad<Mat> {
+impl<Mat: Material + Clone + Sync + Send+ 'static>   quad<Mat> {
     pub fn new(q: Vec3, u: Vec3, v: Vec3, mat: Mat) -> Self {
         let n = Vec3::cross(u, v);
         let normal = n.unit();
@@ -63,7 +63,7 @@ impl<Mat: Material + Clone + 'static>   quad<Mat> {
     }
 }
 
-impl<Mat: Material + Clone + 'static>Hittable for quad<Mat> {
+impl<Mat: Material + Clone + Sync + Send+ 'static>Hittable for quad<Mat> {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let denom = self.normal * r.direction;
         if denom.abs() < 1e-8 {

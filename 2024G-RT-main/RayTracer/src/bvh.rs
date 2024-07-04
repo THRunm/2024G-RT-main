@@ -5,13 +5,13 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 
 pub struct BvhNode {
-    pub left: Arc<dyn Hittable>,
-    pub right: Arc<dyn Hittable>,
+    pub left: Arc<dyn Hittable+ Sync + Send>,
+    pub right: Arc<dyn Hittable+ Sync + Send>,
     pub bbox: Aabb,
 }
 
 impl BvhNode {
-    pub fn new(objects: &[Arc<dyn Hittable>], start: usize, end: usize) -> BvhNode {
+    pub fn new(objects: &[Arc<dyn Hittable+ Send + Sync>], start: usize, end: usize) -> BvhNode {
         let mut bbox = Aabb::new(Interval::empty(), Interval::empty(), Interval::empty());
         for i in start..end {
             let temp_bbox = objects[i].bounding_box().unwrap();
@@ -55,7 +55,7 @@ impl BvhNode {
         let size=objects.len();
         BvhNode::new(&objects, 0, size)
     }
-    pub fn box_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>,axis:usize)->bool{
+    pub fn box_compare(a:&Arc<dyn Hittable+ Sync + Send>,b:&Arc<dyn Hittable+ Sync + Send>,axis:usize)->bool{
         let box_a=a.bounding_box().unwrap();
         let box_b=b.bounding_box().unwrap();
         return match axis{
@@ -65,13 +65,13 @@ impl BvhNode {
             _=>false,
         }
     }
-    pub fn box_x_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>)->bool{
+    pub fn box_x_compare(a:&Arc<dyn Hittable+ Sync + Send>,b:&Arc<dyn Hittable+ Sync + Send>)->bool{
         BvhNode::box_compare(a, b, 0)
     }
-    pub fn box_y_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>)->bool{
+    pub fn box_y_compare(a:&Arc<dyn Hittable+ Sync + Send>,b:&Arc<dyn Hittable+ Sync + Send>)->bool{
         BvhNode::box_compare(a, b, 1)
     }
-    pub fn box_z_compare(a:&Arc<dyn Hittable>,b:&Arc<dyn Hittable>)->bool{
+    pub fn box_z_compare(a:&Arc<dyn Hittable+ Sync + Send>,b:&Arc<dyn Hittable+ Sync + Send>)->bool{
         BvhNode::box_compare(a, b, 2)
     }
 

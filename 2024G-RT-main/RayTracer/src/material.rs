@@ -35,7 +35,7 @@ impl Material for Lambertian {
     }
 
 }
-#[derive(Clone,Copy)]
+#[derive(Clone)]
 pub struct Metal {
     pub albedo: Vec3,
     pub fuzz: f64,
@@ -123,4 +123,25 @@ impl Material for DiffuseLight {
         self.tex.value(u, v, p)
     }
 
+}
+
+#[derive(Clone)]
+pub struct Isotropic {
+    pub tex: Texture,
+}
+
+impl  Isotropic {
+    pub fn new(albedo: Vec3) -> Self {
+        Self { tex: Texture::SolidColor(albedo) }
+    }
+    pub fn set_texture(tex: Texture) -> Self {
+        Self { tex }
+    }
+}
+impl Material for Isotropic {
+    fn scatter(&self, _r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)> {
+        let scattered = Ray::new_time(hit_record.p, Vec3::random_in_unit_sphere(), _r_in.time);
+        let attenuation = self.tex.value(hit_record.u, hit_record.v, &hit_record.p);
+        Some((scattered, attenuation))
+    }
 }

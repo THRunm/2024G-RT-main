@@ -6,7 +6,7 @@ use crate::interval::Interval;
 use crate::material::Material;
 use num_traits::float::FloatConst;
 
-pub struct Sphere<Mat: Material> {
+pub struct Sphere<Mat: Material+ Sync + Send> {
     pub center1: Vec3,
     pub radius: f64,
     pub material: Mat,
@@ -15,7 +15,7 @@ pub struct Sphere<Mat: Material> {
     pub bbox: Aabb,
 }
 
-impl<Mat: Material + Clone + 'static> Sphere<Mat> {
+impl<Mat: Material + Clone + Sync + Send+ 'static> Sphere<Mat> {
     pub fn new(center: Vec3, radius: f64, material: Mat) -> Self {
         let radius = if radius > 0.0 { radius } else { 0.0 };
         let rvec = Vec3::new(radius, radius, radius);
@@ -62,7 +62,7 @@ impl<Mat: Material + Clone + 'static> Sphere<Mat> {
     }
 }
 
-impl<Mat: Material + Clone + 'static> Hittable for Sphere<Mat> {
+impl<Mat: Material + Clone+ Sync + Send + 'static> Hittable for Sphere<Mat> {
     fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let center = self.sphere_center(ray.time);
         let oc = ray.origin - center;

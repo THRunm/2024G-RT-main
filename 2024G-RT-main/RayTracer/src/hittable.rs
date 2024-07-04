@@ -43,13 +43,13 @@ pub trait Hittable: {
     fn bounding_box(&self) -> Option<Aabb>;
 }
 
-pub struct Translate<Obj: Hittable> {
+pub struct Translate<Obj: Hittable+ Sync + Send> {
     pub(crate) offset: Vec3,
     pub(crate) obj: Obj,
     pub(crate) bbox: Aabb,
 }
 
-impl<Obj: Hittable> Translate<Obj> {
+impl<Obj: Hittable+ Sync + Send> Translate<Obj> {
     pub fn new(obj: Obj, offset: Vec3) -> Self {
         let bbox = obj.bounding_box().unwrap() + offset;
         Self {
@@ -60,7 +60,7 @@ impl<Obj: Hittable> Translate<Obj> {
     }
 }
 
-impl<Obj: Hittable> Hittable for Translate<Obj> {
+impl<Obj: Hittable+ Sync + Send> Hittable for Translate<Obj> {
     fn hit(&self, ray: &crate::ray::Ray, ray_t: Interval, rec: &mut HitRecord) -> bool{
         let moved_ray = Ray::new_time(ray.origin - self.offset, ray.direction, ray.time);
         let hit = self.obj.hit(&moved_ray, ray_t,rec);
@@ -74,14 +74,14 @@ impl<Obj: Hittable> Hittable for Translate<Obj> {
     }
 }
 
-pub struct RotateY<Obj: Hittable> {
+pub struct RotateY<Obj: Hittable+ Sync + Send> {
     pub(crate) obj: Obj,
     pub(crate) sin_theta: f64,
     pub(crate) cos_theta: f64,
     pub(crate) bbox: Aabb,
 }
 
-impl<Obj: Hittable> RotateY<Obj> {
+impl<Obj: Hittable+ Sync + Send> RotateY<Obj> {
     pub fn new(obj: Obj, angle: f64) -> Self {
         let radians = f64::PI() / 180.0 * angle;
         let sin_theta = radians.sin();
@@ -119,7 +119,7 @@ impl<Obj: Hittable> RotateY<Obj> {
     }
 }
 
-impl<Obj: Hittable> Hittable for RotateY<Obj> {
+impl<Obj: Hittable+ Sync + Send> Hittable for RotateY<Obj> {
     fn hit(&self, ray: &Ray, ray_t: Interval,rec:&mut HitRecord) ->bool {
         let mut origin = ray.origin;
         let mut direction = ray.direction;
@@ -128,7 +128,7 @@ impl<Obj: Hittable> Hittable for RotateY<Obj> {
         direction.x = self.cos_theta * ray.direction.x - self.sin_theta * ray.direction.z;
         direction.z = self.sin_theta * ray.direction.x + self.cos_theta * ray.direction.z;
         let r=Ray::new_time(origin,direction,ray.time);
-        if !self.obj.bounding_box().unwrap().hit(&r,ray_t){
+        if !self.obj.hit(&r,ray_t,rec){
             return false;
         }
         let mut p:Vec3=rec.p;
