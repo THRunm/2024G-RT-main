@@ -77,18 +77,14 @@ impl BvhNode {
 
 }
 impl Hittable for BvhNode {
-    fn hit(&self, ray: &crate::ray::Ray, ray_t:Interval) -> Option<HitRecord> {
+    fn hit(&self, ray: &crate::ray::Ray, ray_t:Interval,rec:&mut HitRecord) -> bool{
         if !self.bbox.hit(ray,ray_t) {
-            return None;
+            return false;
         }
-        let left_hit=self.left.hit(ray,ray_t);
-        let right_hit=self.right.hit(ray,Interval::set(ray_t.min(),if left_hit.is_none(){ray_t.max()}else{left_hit.unwrap().t}));
-        return match (left_hit,right_hit){
-            (None,None)=>None,
-            (Some(left),None)=>Some(left),
-            (None,Some(right))=>Some(right),
-            (Some(left),Some(right))=>if left.t<right.t{Some(left)}else{Some(right)},
-        }
+        let left_hit=self.left.hit(ray,ray_t,rec);
+        let right_hit=self.right.hit(ray,Interval::set(ray_t.min(),if !left_hit{ray_t.max()}else{rec.t}),rec);
+        return left_hit||right_hit;
+
     }
     fn bounding_box(&self) -> Option<Aabb> {
         return Option::from(self.bbox);

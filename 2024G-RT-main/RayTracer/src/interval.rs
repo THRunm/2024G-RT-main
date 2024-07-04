@@ -1,4 +1,4 @@
-
+use std::ops::{Add, AddAssign, Neg};
 #[derive(Clone, Copy)]
 pub struct Interval {
     pub(crate) min: f64,
@@ -53,3 +53,9 @@ impl Interval {
     }
 }
 
+impl Add<f64> for Interval {
+    type Output = Interval;
+    fn add(self, rhs: f64) -> Interval {
+        Interval { min: self.min + rhs, max: self.max + rhs }
+    }
+}

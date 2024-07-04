@@ -4,10 +4,14 @@ use crate::vec3::Vec3;
 use crate::camera::random;
 use crate::texture::Texture;
 
-pub trait Material {
-    fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)>;
-}
 
+pub trait Material{
+    fn scatter(&self, r_in: &Ray, hit_record: &HitRecord) -> Option<(Ray, Vec3)>;
+    fn emitted(&self, _u: f64, _v: f64, _p: &Vec3) -> Vec3 {
+        Vec3::new(0.0, 0.0, 0.0)
+    }
+}
+#[derive(Clone)]
 pub struct Lambertian {
     pub tex: Texture,
 }
@@ -29,7 +33,9 @@ impl Material for Lambertian {
         let attenuation = self.tex.value(hit_record.u, hit_record.v, &hit_record.p);
         Some((scattered, attenuation))
     }
+
 }
+#[derive(Clone,Copy)]
 pub struct Metal {
     pub albedo: Vec3,
     pub fuzz: f64,
@@ -55,7 +61,9 @@ impl Material for Metal {
             None
         }
     }
+
 }
+#[derive(Clone,Copy)]
 pub struct Dielectric {
     pub refraction_index: f64,
 }
@@ -92,4 +100,27 @@ impl Material for Dielectric {
         let scattered = Ray::new_time(hit_record.p, direction, r_in.time);
         Some((scattered, attenuation))
     }
+
+}
+#[derive(Clone)]
+pub struct DiffuseLight {
+    pub tex: Texture,
+}
+impl DiffuseLight {
+    pub fn new(tex: Texture) -> Self {
+        Self { tex }
+    }
+
+    pub fn set_color(color: Vec3) -> Self {
+        Self { tex: Texture::SolidColor(color) }
+    }
+}
+impl Material for DiffuseLight {
+    fn scatter(&self, _r_in: &Ray, _hit_record: &HitRecord) -> Option<(Ray, Vec3)> {
+        None
+    }
+    fn emitted(&self, u: f64, v: f64, p: &Vec3) -> Vec3 {
+        self.tex.value(u, v, p)
+    }
+
 }

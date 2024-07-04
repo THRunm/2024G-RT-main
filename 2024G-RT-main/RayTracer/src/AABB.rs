@@ -1,6 +1,7 @@
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
+use std::ops::{Add, AddAssign};
 
 #[derive( Copy, Clone)]
 pub(crate) struct Aabb {
@@ -10,22 +11,38 @@ pub(crate) struct Aabb {
 }
 
 impl Aabb {
+    fn pad_to_minimums(&mut self){
+        let delta=0.0001;
+        if self.x.size()<delta{
+            self.x=self.x.expand(delta);
+        }
+        if self.y.size()<delta{
+            self.y=self.y.expand(delta);
+        }
+        if self.z.size()<delta{
+            self.z=self.z.expand(delta);
+        }
+    }
     pub fn new(x:Interval,y:Interval,z:Interval)-> Aabb {
-        Aabb {
+        let mut aabb =Aabb {
             x,
             y,
             z,
-        }
+        };
+        aabb.pad_to_minimums();
+        aabb
     }
     pub fn set(a:Vec3,b:Vec3)-> Aabb {
         let x=if a.x>b.x{Interval::set(b.x,a.x)}else{Interval::set(a.x,b.x)};
         let y=if a.y>b.y{Interval::set(b.y,a.y)}else{Interval::set(a.y,b.y)};
         let z=if a.z>b.z{Interval::set(b.z,a.z)}else{Interval::set(a.z,b.z)};
-        Aabb {
+        let mut aabb=Aabb {
             x,
             y,
             z,
-        }
+        };
+        aabb.pad_to_minimums();
+        aabb
     }
     pub fn surrounding_box(box0: Aabb, box1: Aabb) -> Aabb {
         Aabb {
@@ -86,6 +103,19 @@ impl Aabb {
             }else{
                 2
             }
+        }
+    }
+
+
+}
+impl Add<Vec3> for Aabb {
+    type Output = Self;
+
+    fn add(self, other: Vec3) -> Self {
+        Aabb {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
         }
     }
 

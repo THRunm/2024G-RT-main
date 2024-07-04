@@ -2,6 +2,7 @@ use image::{DynamicImage, GenericImageView,  Pixel};
 use std::env;
 use std::path::Path;
 
+#[derive(Clone)]
 pub(crate) struct RtwImage {
     data: Option<DynamicImage>,
 }

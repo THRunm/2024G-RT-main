@@ -6,7 +6,7 @@ use rand::rngs::StdRng;
 use crate::hittable_list::HittableList;
 use crate::{AUTHOR, is_ci, ray, vec3};
 use crate::color::write_color;
-use crate::hittable::Hittable;
+use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
@@ -37,6 +37,8 @@ pub struct Camera{
     pub(crate) w:Vec3,
     pub(crate) defocus_disk_x:Vec3,
     pub(crate) defocus_disk_y:Vec3,
+
+    pub(crate) background:Vec3,
 }
 pub(crate) fn random() ->f64{
     let mut rng = StdRng::from_entropy();
@@ -73,6 +75,7 @@ impl Camera{
         let defocus_radius=focus_dist*(defocus_angle.to_radians()/2.0).tan();
         let defocus_disk_x=u*defocus_radius;
         let defocus_disk_y=v*defocus_radius;
+        let background=Vec3::new(0.7,0.8,1.0);
         Camera{
             image_width,
             aspect_ratio,
@@ -95,22 +98,22 @@ impl Camera{
             w,
             defocus_disk_x,
             defocus_disk_y,
+            background,
         }
     }
-    pub fn ray_color(r: &Ray, depth:i32, world:&HittableList) -> vec3::Vec3 {
+    pub fn ray_color(&self,r: &Ray, depth:i32, world:&HittableList) -> vec3::Vec3 {
         if depth <= 0 {
             return vec3::Vec3::new(0.0, 0.0, 0.0);
         }
-        if let Some(hit_record) = world.hit(r, Interval::set(0.001, f64::INFINITY)) {
-            if let Some((scattered, attenuation)) = hit_record.material.scatter(&r, &hit_record) {
-                let color = Self::ray_color(&scattered, depth - 1, world);
-                return Vec3::elemul(attenuation, color);
+        let mut hit_record=HitRecord::new();
+        if  world.hit(r, Interval::set(0.001, f64::INFINITY), &mut hit_record) {
+           let color_from_emission=hit_record.material.emitted(hit_record.u,hit_record.v,&hit_record.p);
+            if let Some((scattered, attenuation)) = hit_record.material.scatter(r, &hit_record) {
+                return color_from_emission+Vec3::elemul( attenuation , self.ray_color(&scattered, depth - 1, world));
             }
-            return vec3::Vec3::zero();
+            return color_from_emission;
         }
-        let unit_direction = r.direction.unit();
-        let t = 0.5 * (unit_direction.y + 1.0);
-        vec3::Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + vec3::Vec3::new(0.5, 0.7, 1.0) * t
+        return self.background
     }
     pub fn render(&self, world: HittableList, path:&str, quality:u8){
         let bar: ProgressBar = if is_ci() {
@@ -125,10 +128,13 @@ impl Camera{
         let _pixel_color = [255u8; 3];
         for i in 0..self.image_width {
             for j in 0..self.image_height {
+                if i==250 && j== 300{
+                    println!("{} {}",i,j);
+                }
                 let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
                     let ray=self.get_ray(f64::from(i),f64::from(j));
-                    pixel_color += Self::ray_color(&ray,self.max_depth, &world);
+                    pixel_color += self.ray_color(&ray,self.max_depth, &world);
                 }
                 write_color(pixel_color*self.pixel_samples_scale, &mut img, i, j);
                 bar.inc(1);
@@ -143,6 +149,9 @@ impl Camera{
             Ok(_) => {}
             Err(_) => println!("Outputting image fails."),
         }
+    }
+    pub fn set_background(&mut self,background:Vec3){
+        self.background=background;
     }
     pub fn sample_squre()->Vec3{
         Vec3::new(random()-0.5,random()-0.5,0.0)

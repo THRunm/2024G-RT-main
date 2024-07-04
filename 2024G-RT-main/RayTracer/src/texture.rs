@@ -2,6 +2,7 @@ use crate::vec3::Vec3;
 use crate::image_::RtwImage;
 use crate::interval::Interval;
 use crate::perlin::Perlin;
+#[derive(Clone)]
 pub enum Texture{
     SolidColor(Vec3),
     Checker(Box<CheckerTexture>),
@@ -29,9 +30,11 @@ impl Texture{
         Texture::SolidColor(color)}
 
 }
+#[derive(Clone)]
 pub struct SolidColor{
     color:Vec3,
 }
+#[derive(Clone)]
 pub struct CheckerTexture{
     inv_scale: f64,
     pub(crate) odd:Box<Texture>,
@@ -64,6 +67,7 @@ impl CheckerTexture{
         }
     }
 }
+#[derive(Clone)]
 pub struct ImageTexture{
  image_texture: RtwImage,
 }
@@ -87,6 +91,7 @@ impl ImageTexture{
         Vec3::new(pixel[0] as f64,pixel[1] as f64,pixel[2] as f64)/255.0
     }
 }
+#[derive(Clone)]
 pub struct NoiseTexture{
     noise:Perlin,
     scale:f64,
@@ -99,6 +104,6 @@ impl NoiseTexture{
         }
     }
     pub fn value(&self,u:f64,v:f64,p:Vec3)->Vec3{
-        Vec3::new(1.0,1.0,1.0)*(self.noise.noise(self.scale*p))
+        Vec3::new(0.5,0.5,0.5)*(1.0+(self.scale*p.z+10.0*self.noise.turb(p,7)).sin())
     }
 }
