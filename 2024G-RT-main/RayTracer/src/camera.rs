@@ -12,6 +12,7 @@ use crate::interval::Interval;
 use crate::vec3::Vec3;
 use crate::ray::Ray;
 use rayon::iter::ParallelIterator;
+use rayon::ThreadPoolBuilder;
 
 
 pub struct Camera{
@@ -25,6 +26,10 @@ pub struct Camera{
     pub(crate) lookfrom:Vec3,
     pub(crate) lookat:Vec3,
     pub(crate) vup:Vec3,
+
+
+
+
 
     pub(crate)  defocus_angle:f64,
     pub(crate) focus_dist:f64,
@@ -119,6 +124,7 @@ impl Camera{
         return self.background
     }
     pub fn render(&self, world: HittableList, path:&str, quality:u8){
+        ThreadPoolBuilder::new().num_threads(16).build_global().unwrap();
         let bar: ProgressBar = if is_ci() {
             ProgressBar::hidden()
         } else {
@@ -128,7 +134,7 @@ impl Camera{
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
         img.enumerate_pixels_mut().par_bridge().for_each(|(x, y, pixel)| {
-            let mut pixel_color = Vec3::new(1110.0, 0.0, 0.0);
+            let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
                 for _ in 0..self.sample_per_pixel {
                     let u = x as f64 + random();
                 let v = y as f64 + random();
