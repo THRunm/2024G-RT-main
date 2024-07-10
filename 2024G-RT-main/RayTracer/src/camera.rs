@@ -1,9 +1,9 @@
 use std::fs::File;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
+use indicatif::{ProgressBar, ProgressStyle};
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
-use rayon::prelude::ParallelBridge;
+use rayon::prelude::{IntoParallelIterator, ParallelBridge};
 use crate::hittable_list::HittableList;
 use crate::{AUTHOR, is_ci, ray, vec3};
 use crate::color::write_color;
@@ -124,30 +124,66 @@ impl Camera{
         return self.background
     }
     pub fn render(&self, world: HittableList, path:&str, quality:u8){
-        ThreadPoolBuilder::new().num_threads(16).build_global().unwrap();
+        ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
         let bar: ProgressBar = if is_ci() {
             ProgressBar::hidden()
         } else {
-            ProgressBar::new((self.image_height * self.image_width) as u64)
+            let bar = ProgressBar::new((self.image_height * self.image_width) as u64);
+            bar.set_style(
+                ProgressStyle::default_bar()
+                    .template("{wide_bar} {pos}/{len} [{elapsed_precise} / {eta_precise}]")
+                    .progress_chars("#>-"),
+            );
+            bar
         };
 
         let mut img: RgbImage = ImageBuffer::new(self.image_width, self.image_height);
 
-        img.enumerate_pixels_mut().par_bridge().for_each(|(x, y, pixel)| {
-            let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
-                for _ in 0..self.sample_per_pixel {
-                    let u = x as f64 + random();
-                let v = y as f64 + random();
-                let ray = self.get_ray(u, v);
-                pixel_color += self.ray_color(&ray, self.max_depth, &world);
+        let block_size_x = self.image_width / 16;
+        let block_size_y = self.image_height / 16;
+
+
+        let blocks: Vec<_> = (0..8).flat_map(|bx| {
+            (0..8).map(move |by| {
+                let x_start = bx * block_size_x;
+                let x_end = (bx + 1) * block_size_x;
+                let y_start = by * block_size_y;
+                let y_end = (by + 1) * block_size_y;
+                (x_start, x_end, y_start, y_end)
+            })
+        }).collect();
+
+
+        let partial_images: Vec<_> = blocks.into_par_iter().map(|(x_start, x_end, y_start, y_end)| {
+            let mut local_img = ImageBuffer::new((x_end - x_start) as u32, (y_end - y_start) as u32);
+
+            for x in x_start..x_end {
+                for y in y_start..y_end {
+                    let mut pixel_color = Vec3::new(0.0, 0.0, 0.0);
+                    for _ in 0..self.sample_per_pixel {
+                        let u = (x as f64) + random();
+                        let v = (y as f64) + random();
+                        let ray = self.get_ray(u, v);
+                        pixel_color += self.ray_color(&ray, self.max_depth, &world);
+                    }
+                    pixel_color *= self.pixel_samples_scale;
+                    let r = (255.99 * pixel_color.x.min(1.0).sqrt()) as u8;
+                    let g = (255.99 * pixel_color.y.min(1.0).sqrt()) as u8;
+                    let b = (255.99 * pixel_color.z.min(1.0).sqrt()) as u8;
+                    local_img.put_pixel((x - x_start) as u32, (y - y_start) as u32, image::Rgb([r, g, b]));
+                }
+                bar.inc((y_end - y_start) as u64);
             }
-            pixel_color *= self.pixel_samples_scale;
-            let r = (255.99 * pixel_color.x.min(1.0).sqrt()) as u8;
-            let g = (255.99 * pixel_color.y.min(1.0).sqrt()) as u8;
-            let b = (255.99 * pixel_color.z.min(1.0).sqrt()) as u8;
-            *pixel = image::Rgb([r, g, b]);
-            bar.inc(1);
-        });
+            (local_img, x_start, y_start)
+        }).collect();
+
+
+        for (local_img, x_start, y_start) in partial_images {
+            for (x, y, pixel) in local_img.enumerate_pixels() {
+                img.put_pixel(x + x_start as u32, y + y_start as u32, *pixel);
+            }
+        }
+
         bar.finish();
         // 保存图像到文件
         let output_image = image::DynamicImage::ImageRgb8(img);

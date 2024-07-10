@@ -322,7 +322,7 @@ fn final_scene(path:&str) {
 
     let defocus_angle=0.0;
     let focus_dist=10.0;
-    let mut camera = camera::Camera::new(800, 1.0, 1000  , vfov, lookfrom, lookat, vup, defocus_angle, focus_dist);
+    let mut camera = camera::Camera::new(800, 1.0, 10000  , vfov, lookfrom, lookat, vup, defocus_angle, focus_dist);
     let quality = 100;
     camera.max_depth=40;
     camera.set_background(Vec3::new(0.0,0.0,0.0));
@@ -330,7 +330,7 @@ fn final_scene(path:&str) {
 
 }
 fn main() {
-    let path = "output1/demo.png";
+    let path = "output1/demoTTT.png";
     let mode=9;
     match mode {
         1 => bouncing_spheres(path),
