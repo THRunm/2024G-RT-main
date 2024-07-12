@@ -124,7 +124,7 @@ impl Camera{
         return self.background
     }
     pub fn render(&self, world: HittableList, path:&str, quality:u8){
-        ThreadPoolBuilder::new().num_threads(12).build_global().unwrap();
+        ThreadPoolBuilder::new().num_threads(14).build_global().unwrap();
         let bar: ProgressBar = if is_ci() {
             ProgressBar::hidden()
         } else {
@@ -143,8 +143,8 @@ impl Camera{
         let block_size_y = self.image_height / 16;
 
 
-        let blocks: Vec<_> = (0..8).flat_map(|bx| {
-            (0..8).map(move |by| {
+        let blocks: Vec<_> = (0..16).flat_map(|bx| {
+            (0..16).map(move |by| {
                 let x_start = bx * block_size_x;
                 let x_end = (bx + 1) * block_size_x;
                 let y_start = by * block_size_y;

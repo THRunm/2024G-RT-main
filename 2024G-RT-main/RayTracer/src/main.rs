@@ -14,6 +14,10 @@ mod image_;
 mod perlin;
 mod quad;
 mod constant_medium;
+mod obj_read;
+mod triangle;
+mod obj;
+mod mtl;
 
 
 use std::sync::Arc;
@@ -329,9 +333,27 @@ fn final_scene(path:&str) {
     camera.render(world, path, quality);
 
 }
+fn obj_test(path:&str){
+    let material=material::Metal::new(Vec3::new(0.7,0.6,0.5),0.0);
+    let mut world = obj_read::load_obj_to_hittable_list("input/sr.obj",material);
+    let light = material::DiffuseLight::set_color(Vec3::new(15.0, 15.0, 15.0));
+    world.add(Arc::new(quad::quad::new(Vec3::new(0.0, 5.0, 0.0), Vec3::new(0.0, 0.0, 15.0), Vec3::new(15.0, 0.0, 0.0), light)));
+    let vfov=80.0;
+    let lookfrom = Vec3::new(6.0, 0.0, 10.0);
+    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let vup=Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle=0.0;
+    let focus_dist=10.0;
+    let mut camera = camera::Camera::new(400, 1.0, 100  , vfov, lookfrom, lookat, vup, defocus_angle, focus_dist);
+    let quality = 100;
+    camera.max_depth=40;
+    camera.set_background(Vec3::new(0.2,0.2,0.2));
+    camera.render(world, path, quality);
+}
 fn main() {
-    let path = "output1/demoTTT.png";
-    let mode=9;
+    let path = "output1/objTlabr.png";
+    let mode=10;
     match mode {
         1 => bouncing_spheres(path),
         2 => checkered_spheres(path),
@@ -342,6 +364,7 @@ fn main() {
         7 => cornell_box(path),
         8 => cornell_smoke(path),
         9 => final_scene(path),
+        10 => obj_test(path),
         _ => bouncing_spheres(path),
     }
 
