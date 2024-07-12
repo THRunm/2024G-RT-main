@@ -45,7 +45,7 @@ pub(crate) fn load_obj_to_hittable_list<P: AsRef<Path>, Mat: Material + Sync + S
         }
     }
 
-    let bvh = BvhNode::set(hittable_list.clone());
+    let bvh = BvhNode::set(hittable_list);
     let  mut hittable_list = HittableList::new();
     hittable_list.add(Arc::new(bvh));
     hittable_list

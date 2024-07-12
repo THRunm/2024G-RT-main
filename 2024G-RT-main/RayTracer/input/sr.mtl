@@ -1,17 +1,15 @@
-# Blender MTL File: 'KSR28_Sniperrifle_Blender-2.8_Version.blend'
+# Blender MTL File: 'KSR-29 sniper rifle new.blend'
 # Material Count: 1
 
 newmtl KSR29sniperrifle
-Ns 401.820234
-Ka 0.831818 0.831818 0.831818
-Kd 0.800000 0.800000 0.800000
-Ks 0.527273 0.527273 0.527273
+Ns 96.078431
+Ka 1.000000 1.000000 1.000000
+Kd 0.250811 0.250811 0.250811
+Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
-Ni 1.450000
+Ni 1.000000
 d 1.000000
-illum 3
-map_Bump ..\\textures\\Normal_3.jpg
-map_Kd ..\\textures\\Base_Color_1.jpg
-map_Ks ..\\textures\\Spec.jpg
-map_Ns ..\\textures\\Rougness.png
-refl ..\\textures\\Metallic_3.jpg
+illum 2
+map_Kd textures\ID.png
+map_Bump textures\\KSR29sniperrifle_Normal_OpenGL.jpg
+map_Ks textures\\KSR29sniperrifle_Roughness.jpg

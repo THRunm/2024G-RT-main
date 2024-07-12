@@ -124,7 +124,7 @@ impl Camera{
         return self.background
     }
     pub fn render(&self, world: HittableList, path:&str, quality:u8){
-        ThreadPoolBuilder::new().num_threads(14).build_global().unwrap();
+        ThreadPoolBuilder::new().num_threads(24).build_global().unwrap();
         let bar: ProgressBar = if is_ci() {
             ProgressBar::hidden()
         } else {

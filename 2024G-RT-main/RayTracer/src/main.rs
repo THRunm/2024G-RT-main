@@ -22,6 +22,7 @@ mod mtl;
 
 use std::sync::Arc;
 use vec3::Vec3;
+use crate::bvh::BvhNode;
 use crate::hittable::{RotateY, Translate};
 use crate::hittable_list::HittableList;
 use crate::material::{Dielectric, DiffuseLight, Isotropic, Lambertian, Metal};
@@ -334,25 +335,31 @@ fn final_scene(path:&str) {
 
 }
 fn obj_test(path:&str){
-    let material=material::Metal::new(Vec3::new(0.7,0.6,0.5),0.0);
+    let material=material::Metal::new(Vec3::new(0.7,0.6,0.5),0.2);
     let mut world = obj_read::load_obj_to_hittable_list("input/sr.obj",material);
-    let light = material::DiffuseLight::set_color(Vec3::new(15.0, 15.0, 15.0));
-    world.add(Arc::new(quad::quad::new(Vec3::new(0.0, 5.0, 0.0), Vec3::new(0.0, 0.0, 15.0), Vec3::new(15.0, 0.0, 0.0), light)));
-    let vfov=80.0;
-    let lookfrom = Vec3::new(6.0, 0.0, 10.0);
-    let lookat = Vec3::new(0.0, 0.0, 0.0);
+    let light = DiffuseLight::set_color(Vec3::new(5.0, 5.0, 5.0));
+    world.add(Arc::new(quad::quad::<DiffuseLight>::new(Vec3::new(-5.0, 5.0, -5.0), Vec3::new(10.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 10.0), light)));
+    let red = Lambertian::new(Vec3::new(0.65, 0.05, 0.05));
+    world.add(Arc::new(quad::quad::<Lambertian>::new(Vec3::new(5.0, 5.0, -5.0), Vec3::new(10.0, -3.0, -3.0), Vec3::new(0.0, 0.0, 10.0), red)));
+    let green= Lambertian::new(Vec3::new(0.12, 0.45, 0.15));
+    world.add(Arc::new(sphere::Sphere::new(Vec3::new(0.0, -103.0, 0.0), 100.0, green)));
+    let yellow = Lambertian::new(Vec3::new(0.73, 0.73, 0.0));
+    world.add(Arc::new(quad::quad::<Lambertian>::new(Vec3::new(-5.0, 5.0, -5.0), Vec3::new(-10.0, -3.0, -3.0), Vec3::new(0.0, 0.0, 10.0), yellow)));
+    let vfov=120.0;
+    let lookfrom = Vec3::new(1.0, 2.0, 5.0);
+    let lookat = Vec3::new(2.0, 1.0,0.0);
     let vup=Vec3::new(0.0, 1.0, 0.0);
 
     let defocus_angle=0.0;
     let focus_dist=10.0;
-    let mut camera = camera::Camera::new(400, 1.0, 100  , vfov, lookfrom, lookat, vup, defocus_angle, focus_dist);
+    let mut camera = camera::Camera::new(1000, 1.0, 10000  , vfov, lookfrom, lookat, vup, defocus_angle, focus_dist);
     let quality = 100;
     camera.max_depth=40;
     camera.set_background(Vec3::new(0.2,0.2,0.2));
     camera.render(world, path, quality);
 }
 fn main() {
-    let path = "output1/objTlabr.png";
+    let path = "output1/SR.png";
     let mode=10;
     match mode {
         1 => bouncing_spheres(path),
